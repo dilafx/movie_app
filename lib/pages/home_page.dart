@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:movie_app/models/movie_model.dart';
 import 'package:movie_app/services/api_service.dart';
+import 'package:movie_app/pages/movie_details_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,6 +20,7 @@ class _HomePageState extends State<HomePage> {
       body: SizedBox.expand(
         child: Stack(
           children: [
+            // Background Elements
             Positioned.fill(child: Container(color: Colors.black)),
             Positioned(child: Image.asset('assets/bg1.png')),
             Positioned(
@@ -29,17 +32,17 @@ class _HomePageState extends State<HomePage> {
               child: Container(color: Colors.black.withOpacity(0.5)),
             ),
 
+            // Main Content
             Positioned.fill(
               child: SingleChildScrollView(
-                // proper physics helps it feel natural
-                physics: BouncingScrollPhysics(),
+                physics: const BouncingScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(height: size.height * 0.1),
 
                     // 1. Title
-                    Text(
+                    const Text(
                       'What would You like to watch?',
                       style: TextStyle(
                         color: Colors.white,
@@ -60,124 +63,94 @@ class _HomePageState extends State<HomePage> {
                                 filled: true,
                                 fillColor: Colors.white38,
                                 hintText: 'Search...',
-                                prefixIcon: Icon(Icons.search),
+                                prefixIcon: const Icon(Icons.search),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(25),
                                 ),
                               ),
                             ),
                           ),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           Container(
-                            padding: EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.white38,
                               borderRadius: BorderRadius.circular(25),
                             ),
-                            child: Icon(Icons.search, color: Colors.white),
+                            child: const Icon(
+                              Icons.search,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
                     ),
 
-                    // 3. Spacing
-                    SizedBox(height: 20),
-                    Text(
-                      'Popular Movies',
+                    const SizedBox(height: 20),
 
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
+                    // --- POPULAR MOVIES ---
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        'Popular Movies',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                    SizedBox(height: 20),
-                    // 4. Movie List
-                    SizedBox(
-                      height: size.height * 0.35,
-                      width: size.width,
-                      child: FutureBuilder(
-                        future: ApiService.fetchMovies(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Center(child: CircularProgressIndicator());
-                          } else if (snapshot.hasError) {
-                            return Center(
-                              child: Text(
-                                'Error: ${snapshot.error}',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            );
-                          } else if (!snapshot.hasData ||
-                              snapshot.data!.isEmpty) {
-                            return Center(
-                              child: Text(
-                                'No Movies Available',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            );
-                          } else {
-                            return ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: snapshot.data!.length,
-                              itemBuilder: (context, index) {
-                                final movie = snapshot.data![index];
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10.0,
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(15),
-                                        child: Image.network(
-                                          'https://image.tmdb.org/t/p/w200${movie.posterPath}',
-                                          height: 200,
-                                          fit: BoxFit.cover,
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                                return Container(
-                                                  height: 200,
-                                                  width: 130,
-                                                  color: Colors.grey,
-                                                  child: Icon(
-                                                    Icons.broken_image,
-                                                  ),
-                                                );
-                                              },
-                                        ),
-                                      ),
-                                      SizedBox(height: 10),
-                                      SizedBox(
-                                        width: 130,
-                                        child: Text(
-                                          movie.title,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            );
-                          }
-                        },
-                      ),
+                    const SizedBox(height: 20),
+                    _buildMovieList(
+                      size,
+                      ApiService.fetchMovies(type: 'popular'),
                     ),
 
-                    // Add extra padding at the bottom so content isn't stuck behind keyboard
+                    const SizedBox(height: 20),
+
+                    // --- TOP RATED MOVIES ---
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        'Top Rated Movies',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildMovieList(
+                      size,
+                      ApiService.fetchMovies(type: 'top_rated'),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // --- UPCOMING MOVIES ---
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        'Upcoming Movies',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildMovieList(
+                      size,
+                      ApiService.fetchMovies(type: 'upcoming'),
+                    ),
+
+                    // Bottom Padding
                     SizedBox(
                       height: MediaQuery.of(context).viewInsets.bottom > 0
                           ? 20
-                          : 0,
+                          : 50,
                     ),
                   ],
                 ),
@@ -185,6 +158,96 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Reusable Helper for Movie Lists
+  Widget _buildMovieList(Size size, Future<List<MovieModel>> movieFuture) {
+    return SizedBox(
+      height: size.height * 0.35,
+      width: size.width,
+      child: FutureBuilder<List<MovieModel>>(
+        future: movieFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Error: ${snapshot.error}',
+                style: const TextStyle(color: Colors.white),
+              ),
+            );
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Text(
+                'No Movies Available',
+                style: TextStyle(color: Colors.white),
+              ),
+            );
+          } else {
+            return ListView.builder(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: snapshot.data!.length,
+              itemBuilder: (context, index) {
+                final movie = snapshot.data![index];
+
+                // Wrap the Column in a GestureDetector
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MovieDetailsPage(movie: movie),
+                      ),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(15),
+                          child: Image.network(
+                            'https://image.tmdb.org/t/p/w200${movie.posterPath}',
+                            height: 200,
+                            width: 130,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 200,
+                                width: 130,
+                                color: Colors.grey,
+                                child: const Icon(Icons.broken_image),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: 130,
+                          child: Text(
+                            movie.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+        },
       ),
     );
   }
