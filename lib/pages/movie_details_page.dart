@@ -94,7 +94,7 @@ class MovieDetailsPage extends StatelessWidget {
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        movie.releaseDate.year.toString(),
+                        movie.releaseDate?.year.toString() ?? 'N/A',
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 16,
